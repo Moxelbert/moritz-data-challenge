@@ -1,0 +1,22 @@
+fastapi==0.108.0
+uvicorn==0.25.0
+starlette==0.32.0.post1
+
+# JWT and Authentication
+python-jose==3.3.0
+
+# Google Cloud SDK dependencies for Cloud Storage and Cloud SQL
+google-cloud-storage==2.13.0
+
+# Database ORM (if you're using SQLAlchemy for Cloud SQL/PostgreSQL)
+sqlalchemy==2.0.24
+psycopg2-binary==2.9.6
+
+# CORS support (if needed for cross-origin requests)
+fastapi[all]==0.108.0  # Enables CORS, Pydantic, and WebSockets
+
+# Optional: For more robust authentication management (using OAuth2)
+passlib==1.7.4  # Used for hashing passwords
+
+pytest==7.1.2
+httpx==0.23.0
