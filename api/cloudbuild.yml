@@ -23,6 +23,9 @@ steps:
            '--region', 'europe-west3',
            '--allow-unauthenticated']
 
+options:
+  logging: CLOUD_LOGGING_ONLY
+  
 substitutions:
   _REPO_NAME: 'API-PYTHON'
 timeout: '1200s'
