@@ -1,7 +1,16 @@
 name: Build and Push Docker Image to Artifact Registry
 
+# Trigger the workflow only when changes are detected in the 'api/' folder
 on:
   push:
+    paths:
+      - 'api/**'    # Trigger only when files in 'api/' are modified
+    branches:
+      - main
+
+  pull_request:
+    paths:
+      - 'api/**'    # Trigger for pull requests that modify files in 'api/'
     branches:
       - main
 
