@@ -1,0 +1,43 @@
+name: Build and Push Docker Image to Artifact Registry
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Check out the repository code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Step 2: Set up Google Cloud SDK
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v0.10.0
+      with:
+        project_id: ${{ secrets.GCP_PROJECT }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+    # Step 3: Authenticate Docker to use Artifact Registry
+    - name: Authenticate Docker for Artifact Registry
+      run: |
+        gcloud auth configure-docker europe-west3-docker.pkg.dev
+
+    # Step 4: Build the Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA .
+
+    # Step 5: Run tests (customize this to your application)
+    - name: Run Tests
+      run: |
+        docker run europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA pytest
+
+    # Step 6: Push the Docker image to Google Artifact Registry (if tests pass)
+    - name: Push Docker image
+      if: success()
+      run: |
+        docker push europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA
