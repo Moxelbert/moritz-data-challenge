@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container
-COPY main.py database.py models.py ./
+COPY main.py database.py models.py test_main.py ./
 
 # Expose the port the application will run on
 EXPOSE 8080
