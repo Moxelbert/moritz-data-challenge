@@ -38,7 +38,7 @@ jobs:
     # Step 4: Build the Docker image
     - name: Build Docker image
       run: |
-        docker build -t europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA .
+        docker build -t europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA api/
 
     # Step 5: Run tests (customize this to your application)
     - name: Run Tests
