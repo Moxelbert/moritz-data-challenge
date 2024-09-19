@@ -41,8 +41,8 @@ jobs:
         SERVICE_KEY64: ${{ secrets.SERVICE_KEY64 }}
       with:
         credentials_json: $SERVICE_KEY64
-        context: .
+        context: api/.
         push: true
-        tags: europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:latest api/
+        tags: europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:latest
         build-args: |
           SERVICE_KEY64
