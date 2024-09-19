@@ -8,7 +8,7 @@ client = TestClient(app)
 def test_protected_route_without_token():
     response = client.get("/protected/")
     assert response.status_code == 401
-    #assert response.json() == {"detail": "Not authenticated"}
+    assert response.json() == {"detail": "Not authenticated"}
 '''
 # Mock the dependency to simulate an authenticated user
 def mock_get_current_user():
