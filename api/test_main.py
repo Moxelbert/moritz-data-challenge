@@ -1,22 +1,23 @@
 from fastapi.testclient import TestClient
 from main import app
-from _pytest.assertion import truncate
-
-
-truncate.DEFAULT_MAX_LINES = 9999
-truncate.DEFAULT_MAX_CHARS = 9999 
+from unittest.mock import patch
 
 client = TestClient(app)
 
-"""def test_login():
-    response = client.post("/login/", json={"username": "testuser", "password": "testpassword"})
+# Test that protected route returns 401 Unauthorized when no token is provided
+def test_protected_route_without_token():
+    response = client.get("/protected/")
+    assert response.status_code == 401
+    #assert response.json() == {"detail": "Not authenticated"}
+'''
+# Mock the dependency to simulate an authenticated user
+def mock_get_current_user():
+    return {"username": "testuser"}
+
+# Test that the protected route is accessible with valid authentication
+@patch("main.get_current_user", mock_get_current_user)  # Mock the user authentication
+def test_protected_route_with_token():
+    response = client.get("/protected/")
     assert response.status_code == 200
-    assert "access_token" in response.json()
-
-def test_invalid_login():
-    response = client.post("/login/", json={"username": "invalid2", "password": "wrongpassword"})
-    assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid username or password"}"""
-
-def test_anything():
-    assert 1 == 1
+    #assert response.json() == {"message": "You are authorized", "user": "testuser"}
+'''
