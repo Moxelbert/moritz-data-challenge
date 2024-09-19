@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine, inspect, text
 import traceback
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import os
 
 
