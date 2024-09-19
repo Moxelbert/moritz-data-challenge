@@ -17,23 +17,17 @@ SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Start FastAPI app
+# Initialize FastAPI app
 app = FastAPI()
-
-# Database simulation for users (in practice, query your database)
-#users_db = {"user1": {"username": "user1", "password": "1900Juenter"}}
 
 # OAuth2PasswordBearer is used to extract the token from request headers
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# Define the allowed origins (you can allow specific domains or all)
+# where can the API take requests from?
 origins = [
-    "http://localhost:3000",  # React app URL
-    "http://localhost:8000",  # FastAPI itself (optional)
+    "http://localhost:3000",  # for local development
     "https://react-app-moritz-360127904619.europe-west3.run.app"
 ]
-
-
 
 class DataItem(BaseModel):
     time_stamp: str
@@ -47,13 +41,13 @@ class LoginRequest(BaseModel):
 # Add CORS middleware to FastAPI app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allows specific origins
+    allow_origins=origins,  # Allows only specific origins
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
     allow_headers=["*"],  # Allows all headers
 )
 
-# JWT utility functions
+# jwt utility functions
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -68,7 +62,7 @@ def verify_access_token(token: str):
     except JWTError:
         return None
 
-# Login route: Validates user credentials and returns a JWT
+# Login route: validates user credentials and returns a jwt
 @app.post("/login/")
 async def login(login_request: LoginRequest, db: Session = Depends(get_db)):
     print(f'here comes the user: {login_request.username}')
@@ -76,20 +70,11 @@ async def login(login_request: LoginRequest, db: Session = Depends(get_db)):
     if user is None or user.password != login_request.password:
         raise HTTPException(status_code=400, detail="Invalid username or password")
 
-    # Generate JWT token
+    # Generate jtw token
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Login route: Validates user credentials and returns a JWT
-'''@app.post("/login/")
-async def login(user: User):
-    if user.username not in users_db or users_db[user.username]["password"] != user.password:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    
-    access_token = create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}'''
-
-# Protected route: Requires JWT token to access
+# Protected route that requires the jwt token to access
 @app.get("/protected/")
 async def protected_route(token: str = Depends(oauth2_scheme)):
     payload = verify_access_token(token)
@@ -97,10 +82,10 @@ async def protected_route(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     return {"message": "You are authorized", "user": payload["sub"]}
 
-# GCP Storage Bucket details
+# GCS bucket details
 BUCKET_NAME = 'moritz-eraneos-challenge'
 
-# Function to upload a JSON file to Google Cloud Storage
+# Function to upload a JSON file to GCS
 def upload_json_to_gcp(json_data, file_name):
     client = storage.Client()
     bucket = client.get_bucket(BUCKET_NAME)
@@ -108,7 +93,7 @@ def upload_json_to_gcp(json_data, file_name):
     blob.upload_from_string(json.dumps(json_data), content_type='application/json')
     return True
 
-# POST route to receive JSON and upload it to GCP
+# POST route to receive json and upload it to GCS
 @app.post("/upload/")
 async def upload_json(data: DataItem, token: str = Depends(oauth2_scheme)):
     # Validate the token first

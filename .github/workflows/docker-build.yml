@@ -1,16 +1,9 @@
 name: Build and Push Docker Image to Google Artifact Registry
 
-# Trigger the workflow only when changes are detected in the 'api/' folder
 on:
   push:
     paths:
-      - 'api/**'    # Trigger only when files in 'api/' are modified
-    branches:
-      - main
-
-  pull_request:
-    paths:
-      - 'api/**'    # Trigger for pull requests that modify files in 'api/'
+      - 'api/**'    # only trigger when files in 'api/' are modified
     branches:
       - main
 
@@ -19,39 +12,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Check out the repository code
+    # step 1: check out repository code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Step 2: Authenticate using google-github-actions/auth
+    # step 2: authenticate using google-github-actions/auth
     - id: "auth"
       uses: "google-github-actions/auth@v2"
       with:
         credentials_json: "${{ secrets.SERVICE_KEY64 }}"  # Use the Base64-encoded service account key
     
-    # Step 3: Set up Google Cloud SDK
+    # step 3: Set up Google Cloud SDK
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v2.1.1
       with:
         project_id: ${{ secrets.GCP_PROJECT }}
         service_account_key: ${{ secrets.GCP_SA_KEY }}
 
-    # Step 4: Authenticate Docker to use Artifact Registry
+    # step 4: authenticate docker to use artifact registry
     - name: Authenticate Docker for Artifact Registry
       run: |
         gcloud auth configure-docker europe-west3-docker.pkg.dev
 
-    # Step 5: Build the Docker image
+    # step 5: build Docker image
     - name: Build Docker image
       run: |
         docker build -t europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA api/
 
-    # Step 6: Run tests (customize this to your application)
+    # step 6: run tests (customize this to your application)
     - name: Run Tests
       run: |
         docker run europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA pytest
 
-    # Step 7: Push the Docker image to Google Artifact Registry (if tests pass)
+    # step 7: push Docker image
     - name: Push Docker image
       if: success()
       run: |

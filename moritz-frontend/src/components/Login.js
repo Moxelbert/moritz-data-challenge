@@ -16,11 +16,11 @@ function Login() {
         password,
       });
 
-      // Store token in localStorage
+      // store token in localStorage
       localStorage.setItem('token', response.data.access_token);
       setError(null);
 
-      // Redirect to the protected route after successful login
+      // redirect to the protected route after successful login
       navigate('/protected');
     } catch (err) {
       setError('Invalid credentials');
