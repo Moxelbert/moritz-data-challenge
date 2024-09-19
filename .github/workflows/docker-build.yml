@@ -43,6 +43,6 @@ jobs:
         credentials_json: $SERVICE_KEY64
         context: .
         push: true
-        tags: europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:latest
+        tags: europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:latest api/
         build-args: |
           SERVICE_KEY64
