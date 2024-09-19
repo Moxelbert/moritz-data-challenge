@@ -14,9 +14,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    # Step 2: Decode and set the service account key (optional but recommended)
-    - name: Decode and set service account key
-      run: echo ${{ secrets.SERVICE_KEY64 }} | base64 --decode > $HOME/gcloud-key.json
 
     # Step 3: Set up Docker Build and Push using the Base64-encoded key
     - name: Build Image and Push to Google Artifact Registry
