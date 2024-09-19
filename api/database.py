@@ -23,7 +23,7 @@ def get_db():
     db = SessionLocal()
     try:
         # Run a simple query to validate the connection
-        result = db.execute(text("SELECT * from users"))
+        result = db.execute(text("SELECT * from users limit 1"))
         print("Connection test passed. Query result:", result.fetchone())
 
         yield db
