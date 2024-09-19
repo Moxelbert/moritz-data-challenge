@@ -42,7 +42,7 @@ jobs:
     # step 6: run tests (customize this to your application)
     - name: Run Tests
       run: |
-        docker run europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA pytest
+        docker run --env DB_CONNECTION_URL=${{ secrets.DB_CONNECTION_URL }} europe-west3-docker.pkg.dev/data-case-moritz-opitz/moritz-artifacts/python-api:$GITHUB_SHA pytest
 
     # step 7: push Docker image
     - name: Push Docker image

@@ -19,5 +19,5 @@ def mock_get_current_user():
 def test_protected_route_with_token():
     response = client.get("/protected/")
     assert response.status_code == 200
-    #assert response.json() == {"message": "You are authorized", "user": "testuser"}
+    assert response.json() == {"message": "You are authorized", "user": "testuser"}
 '''
