@@ -81,4 +81,4 @@ def test_invalid_file_upload():
     )
 
     # Assert that the response status code is 422 (Unprocessable Entity)
-    assert response.status_code == 401
+    assert response.status_code == 422
