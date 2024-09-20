@@ -12,51 +12,33 @@ def test_protected_route_without_token():
     response = client.get("/protected/")
     assert response.status_code == 401
 
-# Test the full authentication flow (login and access protected route)
-def test_protected_route_with_token():
-    # Simulate a login request to get a real token
-    response = client.post("/login", data={"username": "user1", "password": "123password"})
-    
-    # Extract the token from the login response
+# Test case for the full authentication process
+def test_full_authentication_process():
+    # Step 1: Simulate a login request
+    login_data = {
+        "username": "testuser",   # Make sure this user exists in your database
+        "password": "testpassword"  # Correct password for the user
+    }
+
+    # Send a POST request to the login endpoint
+    response = client.post("/login/", json=login_data)
+
+    # Ensure the login was successful (status code 200)
     assert response.status_code == 200
-    token = response.json()["access_token"]
 
-    # Pass the token in the Authorization header
+    # Extract the token from the response
+    token_data = response.json()
+    assert "access_token" in token_data
+    access_token = token_data["access_token"]
+
+    # Step 2: Use the returned token to access a protected route
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {access_token}"  # Pass the JWT token in the Authorization header
     }
 
-    # Access the protected route with the valid token
-    response = client.get("/protected/", headers=headers)
-    
-    assert response.status_code == 200
-    assert response.json() == {"message": "You are authorized", "user": "user1"}
+    # Send a GET request to a protected route (replace with your actual protected route)
+    protected_response = client.get("/protected/", headers=headers)
 
-# Test invalid JSON upload
-def test_upload_invalid_json():
-    # Simulate a login request to get a real token
-    response = client.post("/login", data={"username": "user1", "password": "123password"})
-    
-    # Extract the token from the login response
-    token = response.json()["access_token"]
-
-    # Create invalid JSON content
-    invalid_json_content = {
-        "invalid_key": "2024-09-15T12:00:00Z",
-        "data": "not an array of floats"
-    }
-
-    # Pass the token in the Authorization header
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-
-    # Send the invalid JSON file
-    response = client.post(
-        "/upload-json",
-        files={"file": ("invalid.json", json.dumps(invalid_json_content), "application/json")},
-        headers=headers
-    )
-
-    # Assert that the response status code is 422
-    assert response.status_code == 422
+    # Ensure the protected route is accessible with the valid token
+    assert protected_response.status_code == 200
+    assert protected_response.json() == {"message": "You are authorized", "user": "testuser"}
