@@ -15,7 +15,7 @@ def test_protected_route_without_token():
 # Test the full authentication flow (login and access protected route)
 def test_protected_route_with_token():
     # Simulate a login request to get a real token
-    response = client.post("/login", data={"username": "testuser", "password": "testpass"})
+    response = client.post("/login", data={"username": "user1", "password": "123password"})
     
     # Extract the token from the login response
     assert response.status_code == 200
@@ -30,12 +30,12 @@ def test_protected_route_with_token():
     response = client.get("/protected/", headers=headers)
     
     assert response.status_code == 200
-    assert response.json() == {"message": "You are authorized", "user": "testuser"}
+    assert response.json() == {"message": "You are authorized", "user": "user1"}
 
 # Test invalid JSON upload
 def test_upload_invalid_json():
     # Simulate a login request to get a real token
-    response = client.post("/login", data={"username": "testuser", "password": "testpass"})
+    response = client.post("/login", data={"username": "user1", "password": "123password"})
     
     # Extract the token from the login response
     token = response.json()["access_token"]
