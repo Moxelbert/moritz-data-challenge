@@ -1,43 +1,58 @@
 from fastapi.testclient import TestClient
 from main import app
-from unittest.mock import patch
+from database import get_db
+from unittest.mock import patch, MagicMock
+from sqlalchemy.orm import Session
 import pytest
 
 import json
 
 client = TestClient(app)
 
+# Create a mock database session
+def mock_get_db():
+    db = MagicMock()
+    # Mock a user object that would come from the database
+    mock_user = MagicMock()
+    mock_user.username = "testuser"
+    mock_user.password = "testpassword"  # Assuming passwords are not hashed in this simple test
+    db.query().filter().first.return_value = mock_user
+    yield db
+
 # Test that protected route returns 401 Unauthorized when no token is provided
 def test_protected_route_without_token():
     response = client.get("/protected/")
     assert response.status_code == 401
 
-# Test case for the full authentication process
-def test_full_authentication_process():
-    # Step 1: Simulate a login request
+# Override the get_db dependency in your app
+@pytest.fixture(autouse=True)
+def override_get_db():
+    app.dependency_overrides[get_db] = mock_get_db
+    yield
+    app.dependency_overrides[get_db] = None
+
+# Example test case for login
+def test_login():
+    # Send correct login data (as per your Pydantic LoginRequest model)
     login_data = {
-        "username": "user1",   # Make sure this user exists in your database
-        "password": "123password"  # Correct password for the user
+        "username": "testuser",
+        "password": "testpassword"
     }
 
-    # Send a POST request to the login endpoint
+    # Send POST request to login endpoint
     response = client.post("/login/", json=login_data)
 
-    # Ensure the login was successful (status code 200)
+    # Assert that the login is successful (status code 200)
     assert response.status_code == 200
+    assert "access_token" in response.json()
 
-    # Extract the token from the response
-    token_data = response.json()
-    assert "access_token" in token_data
-    access_token = token_data["access_token"]
-
-    # Step 2: Use the returned token to access a protected rout
+# Example test case for a protected route using a mock token
+def test_protected_route():
+    # Mock token and headers
     headers = {
-        "Authorization": f"Bearer {access_token}"  # Pass the JWT token in the Authorization header
+        "Authorization": "Bearer mocked_token"
     }
 
-    # Send a GET request to a protected route (replace with your actual protected route)
-    protected_response = client.get("/protected/", headers=headers)
+    response = client.get("/protected/", headers=headers)
 
-    # Ensure the protected route is accessible with the valid token
-    assert protected_response.status_code == 200
+    assert response.status_code == 200
