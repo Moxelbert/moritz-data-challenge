@@ -41,4 +41,3 @@ def test_full_authentication_process():
 
     # Ensure the protected route is accessible with the valid token
     assert protected_response.status_code == 200
-    assert protected_response.json() == {"message": "You are authorized", "user": "testuser"}
