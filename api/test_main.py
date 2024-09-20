@@ -31,7 +31,7 @@ def test_full_authentication_process():
     assert "access_token" in token_data
     access_token = token_data["access_token"]
 
-    # Step 2: Use the returned token to access a protected route
+    # Step 2: Use the returned token to access a protected rout
     headers = {
         "Authorization": f"Bearer {access_token}"  # Pass the JWT token in the Authorization header
     }
