@@ -74,10 +74,13 @@ def test_invalid_file_upload():
         "data": "not an array of floats"        # 'data' should be an array of floats
     }
 
-    # Simulate a POST request to upload the invalid JSON
+    # Convert the JSON content to bytes (as required by UploadFile)
+    file_content = json.dumps(invalid_json_content).encode('utf-8')
+
+    # Simulate a POST request to upload the invalid JSON file
     response = client.post(
-        "/upload-json",  # Adjust this to your actual upload endpoint
-        files={"file": ("invalid.json", json.dumps(invalid_json_content), "application/json")}
+        "/upload-json/",  # Adjust this to your actual upload endpoint
+        files={"file": ("invalid.json", file_content, "application/json")}  # Provide bytes for the file content
     )
 
     # Assert that the response status code is 422 (Unprocessable Entity)
