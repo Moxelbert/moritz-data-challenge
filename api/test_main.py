@@ -12,29 +12,51 @@ def test_protected_route_without_token():
     response = client.get("/protected/")
     assert response.status_code == 401
 
-# Mock the dependency to simulate an authenticated user
-def mock_get_current_user():
-    return {"username": "user1"}
-
-# Test that the protected route is accessible with valid authentication
-@patch("main.get_current_user", mock_get_current_user)  # Patch the actual function used in the app
+# Test the full authentication flow (login and access protected route)
 def test_protected_route_with_token():
-    response = client.get("/protected/")
+    # Simulate a login request to get a real token
+    response = client.post("/login", data={"username": "testuser", "password": "testpass"})
+    
+    # Extract the token from the login response
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    # Pass the token in the Authorization header
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Access the protected route with the valid token
+    response = client.get("/protected/", headers=headers)
+    
     assert response.status_code == 200
     assert response.json() == {"message": "You are authorized", "user": "testuser"}
 
 # Test invalid JSON upload
-@patch("main.get_current_user", mock_get_current_user)  # Mock the user for this test as well
 def test_upload_invalid_json():
+    # Simulate a login request to get a real token
+    response = client.post("/login", data={"username": "testuser", "password": "testpass"})
+    
+    # Extract the token from the login response
+    token = response.json()["access_token"]
+
+    # Create invalid JSON content
     invalid_json_content = {
         "invalid_key": "2024-09-15T12:00:00Z",
         "data": "not an array of floats"
     }
 
+    # Pass the token in the Authorization header
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # Send the invalid JSON file
     response = client.post(
-        "/upload-json",  # Add the leading slash
-        files={"file": ("invalid.json", json.dumps(invalid_json_content), "application/json")}
+        "/upload-json",
+        files={"file": ("invalid.json", json.dumps(invalid_json_content), "application/json")},
+        headers=headers
     )
 
-    # Assert that the response status code is 422 (or change based on your validation logic)
+    # Assert that the response status code is 422
     assert response.status_code == 422
