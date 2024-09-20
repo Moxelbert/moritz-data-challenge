@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
 import AddNumbers from './components/AddNumbers';
+import UploadJson from './components/UploadJson';
 import ProtectedRoute from './components/ProtectedRoute';
 import { jwtDecode } from 'jwt-decode';
 
@@ -37,8 +38,11 @@ function App() {
         {/* Login Route */}
         <Route path="/login" element={<Login />} />
         
-        {/* Protected Route */}
-        <Route path="/protected" element={<ProtectedRoute><AddNumbers /></ProtectedRoute>} />
+        {/* Protected Route with both components */}
+        <Route path="/protected" element={<ProtectedRoute>
+          <AddNumbers />
+          <UploadJson />
+        </ProtectedRoute>} />
       </Routes>
     </Router>
   );
