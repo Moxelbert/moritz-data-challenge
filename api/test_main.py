@@ -16,8 +16,8 @@ def test_protected_route_without_token():
 def test_full_authentication_process():
     # Step 1: Simulate a login request
     login_data = {
-        "username": "testuser",   # Make sure this user exists in your database
-        "password": "testpassword"  # Correct password for the user
+        "username": "user1",   # Make sure this user exists in your database
+        "password": "123password"  # Correct password for the user
     }
 
     # Send a POST request to the login endpoint
