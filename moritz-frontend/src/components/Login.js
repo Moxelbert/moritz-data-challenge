@@ -10,8 +10,8 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    try {
-      const response = await axios.post('https://python-api-360127904619.europe-west3.run.app/login/', {
+    try { //https://python-api-360127904619.europe-west3.run.app/login/
+      const response = await axios.post('http://localhost:8000/login/', {
         username,
         password,
       });
