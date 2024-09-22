@@ -72,7 +72,6 @@ def verify_access_token(token: str):
         return None
 
 def get_current_user(db, login_request: LoginRequest):
-    print(f'hello: {db.query(User).filter(User.username == login_request.username).first()}')
     return db.query(User).filter(User.username == login_request.username).first()
 
 # Login route: validates user credentials and returns a jwt
