@@ -150,7 +150,6 @@ async def upload_large_json(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     origin = request.headers.get("origin")
