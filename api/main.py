@@ -1,24 +1,32 @@
-from fastapi import FastAPI, HTTPException, Depends, Request, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from google.cloud import storage
 import json
 import datetime
+import os
+
+from fastapi import FastAPI, HTTPException, Depends, Request, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.models import APIKey
+from google.cloud import storage
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, ValidationError
+from typing import List
+
 from database import get_db
 from models import User
-from pydantic import BaseModel, ValidationError
 
 
 # JWT Config
-SECRET_KEY = "blablabla" #your_secret_key
+SECRET_KEY = os.getenv('API_SECRET_KEY')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Initialize FastAPI app
-app = FastAPI()
+app = FastAPI(    
+    title="Moritz API",
+    description="This is a detailed description of my API.",
+    version="1.0")
 
 # OAuth2PasswordBearer is used to extract the token from request headers
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -29,6 +37,7 @@ origins = [
     "https://react-app-moritz-360127904619.europe-west3.run.app"
 ]
 
+# define the expected format of the incoming JSONs data to be verified by Pydantic
 class DataItem(BaseModel):
     time_stamp: str
     data: list[float]
@@ -37,12 +46,6 @@ class DataItem(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
-
-# pydantic model for validating JSON file content
-class UploadedData(BaseModel):
-    timestamp: str
-    data: list[float]
-
 
 # Add CORS middleware to FastAPI app
 app.add_middleware(
@@ -53,8 +56,20 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    origin = request.headers.get("origin")
+    print(f"Request from Origin: {origin}")
+    response = await call_next(request)
+    print(f"Response Headers: {response.headers}")
+    return response
+
 # GCS bucket details
 BUCKET_NAME = 'moritz-eraneos-challenge'
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
 
 # jwt utility functions
 def create_access_token(data: dict):
@@ -96,24 +111,16 @@ async def protected_route(token: str = Depends(oauth2_scheme)):
     return {"message": "You are authorized", "user": payload["sub"]}
 
 # Function to upload a JSON file to GCS
-def upload_json_to_gcp(data, file_name, is_file=False):
+def upload_json_string_to_gcp(data, file_name, is_file=False):
     client = storage.Client()
     bucket = client.get_bucket(BUCKET_NAME)
     blob = bucket.blob(file_name)
-    
-    if is_file:
-        # If the data is a file, use upload_from_file
-        with open(data, 'rb') as file_data:
-            blob.upload_from_file(file_data, content_type='application/json')
-    else:
-        # If the data is a JSON string, upload it as string content
-        blob.upload_from_string(json.dumps(data), content_type='application/json')
-    
+    blob.upload_from_string(json.dumps(data), content_type='application/json')
     return True
 
 # POST route to receive json and upload it to GCS
 @app.post("/upload/")
-async def upload_json(data: DataItem, token: str = Depends(oauth2_scheme)):
+async def upload_json_from_string(data: DataItem, token: str = Depends(oauth2_scheme)):
     # Validate the token first
     payload = verify_access_token(token)
     if not payload:
@@ -121,13 +128,13 @@ async def upload_json(data: DataItem, token: str = Depends(oauth2_scheme)):
     try:
         file_name = f"data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         json_data = data.dict()
-        upload_json_to_gcp(json_data, file_name)
+        upload_json_string_to_gcp(json_data, file_name)
         return {"status": "success", "file_name": file_name}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 # Function to upload the file directly to GCS
-def upload_file_to_gcp(
+def upload_json_file_to_gcp(
     file: UploadFile, destination_blob_name: str):
     client = storage.Client()
     bucket = client.bucket(BUCKET_NAME)
@@ -137,23 +144,56 @@ def upload_file_to_gcp(
     blob.upload_from_file(file.file, content_type=file.content_type)
     return True
 
-@app.post("/upload-json/")
+@app.post("/upload-json/", summary="Upload JSON File", tags=["File Upload"])
 async def upload_large_json(
     file: UploadFile = File(...), 
     token: str = Depends(oauth2_scheme)):
+    """
+    ### Description:
+    This endpoint allows authenticated users to upload a **JSON file**. The file will be uploaded to **Google Cloud Storage** and processed on the backend.
+
+    ### Authorization:
+    - This endpoint requires a **Bearer token** for authorization.
+    - The token must be passed in the `Authorization` header like so: `Bearer <your-token>`.
+
+    ### Parameters:
+    - **file**: The JSON file that needs to be uploaded. The file should be sent using `multipart/form-data`.
+
+    ### Request Format:
+    - Content Type: `multipart/form-data`
+    - Example Request Body:
+      ```bash
+      curl -X 'POST' \\
+        'https://your-api-endpoint/upload-json/' \\
+        -H 'Authorization: Bearer <your-token>' \\
+        -F 'file=@path-to-your-json-file.json'
+      ```
+
+    ### Responses:
+    - **200 OK**: File uploaded successfully.
+    - **401 Unauthorized**: Invalid or missing token.
+    - **500 Internal Server Error**: An error occurred during the file upload.
+
+    ### Example Response (Success):
+    ```json
+    {
+      "status": "success",
+      "filename": "uploaded_filename.json"
+    }
+    ```
+
+    ### Example Response (Error):
+    ```json
+    {
+      "detail": "Invalid or expired token"
+    }
+    ```
+    """
     payload = verify_access_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     try:
-        upload_file_to_gcp(file, file.filename)
+        upload_json_file_to_gcp(file, file.filename)
         return {"status": "success", "filename": file.filename}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    origin = request.headers.get("origin")
-    print(f"Request from Origin: {origin}")
-    response = await call_next(request)
-    print(f"Response Headers: {response.headers}")
-    return response
